@@ -1,0 +1,43 @@
+{
+  "domainStrategy": "IPIfNonMatch",
+  "rules": [
+    {
+      "type": "field",
+      "domain": [
+        "domain:bilibili.com",
+        "domain:bilivideo.com",
+        "domain:bilivideo.cn",
+        "domain:hdslb.com",
+        "domain:acgvideo.com",
+        "domain:iqiyi.com",
+        "domain:iqiyipic.com",
+        "domain:ppsimg.com",
+        "domain:qy.net",
+        "domain:youku.com",
+        "domain:youku.tv",
+        "domain:alicdn.com",
+        "domain:mgtv.com",
+        "domain:hunantv.com",
+        "domain:le.com",
+        "domain:letv.com",
+        "domain:letvcloud.com",
+        "domain:sohu.com",
+        "domain:tv.sohu.com",
+        "domain:pptv.com",
+        "domain:v.qq.com",
+        "domain:film.qq.com",
+        "domain:wetv.vip",
+        "domain:zhihu.com",
+        "domain:douyu.com",
+        "domain:huya.com",
+        "domain:xiaohongshu.com"
+      ],
+      "outboundTag": "proxy"
+    },
+    {
+      "type": "field",
+      "network": "tcp,udp",
+      "outboundTag": "direct"
+    }
+  ]
+}
