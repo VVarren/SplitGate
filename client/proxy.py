@@ -29,11 +29,12 @@ def _get_status(client, region, instance_id):
     return resp.body.instance_statuses.instance_status[0].status
 
 
-def _wait_for(client, region, instance_id, target):
-    while True:
+def _wait_for(client, region, instance_id, target, max_wait=120):
+    for _ in range(max_wait // 5):
         if _get_status(client, region, instance_id) == target:
             return
         time.sleep(5)
+    raise TimeoutError(f'Instance did not reach {target!r} within {max_wait}s')
 
 
 def _on(client, region, instance_id, eip):
@@ -73,6 +74,16 @@ def main(argv=None):
         return 1
 
     load_dotenv(Path(__file__).parent / '.env')
+
+    required = {
+        'ALIBABA_ACCESS_KEY_ID', 'ALIBABA_ACCESS_KEY_SECRET',
+        'ALIBABA_INSTANCE_ID', 'ALIBABA_REGION', 'PROXY_EIP',
+    }
+    missing = required - os.environ.keys()
+    if missing:
+        print(f'Missing env vars: {", ".join(sorted(missing))}', file=sys.stderr)
+        return 1
+
     access_key_id = os.environ['ALIBABA_ACCESS_KEY_ID']
     access_key_secret = os.environ['ALIBABA_ACCESS_KEY_SECRET']
     instance_id = os.environ['ALIBABA_INSTANCE_ID']
