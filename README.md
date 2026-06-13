@@ -108,17 +108,19 @@ cp client/.env.example client/.env
 # Edit client/.env — Access Key from Alibaba Cloud console → RAM → Access Keys
 ```
 
-Add `client/` to your Windows PATH permanently (PowerShell as Administrator, once):
+Add `client/` to your Windows PATH permanently (one-time setup):
+
+1. Press **Win** → type `powershell` → right-click **Windows PowerShell** → **Run as administrator**
+2. Paste and press Enter:
 
 ```powershell
-[Environment]::SetEnvironmentVariable(
-    'PATH',
-    [Environment]::GetEnvironmentVariable('PATH', 'Machine') + ';C:\dev\Personal\proxy\client',
-    [EnvironmentVariableTarget]::Machine
-)
+[Environment]::SetEnvironmentVariable('PATH', [Environment]::GetEnvironmentVariable('PATH', 'Machine') + ';C:\dev\Personal\proxy\client', [EnvironmentVariableTarget]::Machine)
 ```
 
-Restart your terminal, then:
+3. Close the admin window — no output means it worked
+4. Open a **new** terminal (the change won't apply to already-open windows)
+
+Then:
 
 ```
 proxy on       # Start the VPS — prints the EIP when ready
