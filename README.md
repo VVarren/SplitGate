@@ -93,6 +93,43 @@ Then open [bilibili.com](https://bilibili.com) and confirm region-locked content
 
 ---
 
+## 5. CLI Toggle (Start / Stop the VPS)
+
+Install dependencies once:
+
+```bash
+pip install -r client/requirements.txt
+```
+
+Copy the credential template and fill in your values:
+
+```bash
+cp client/.env.example client/.env
+# Edit client/.env — Access Key from Alibaba Cloud console → RAM → Access Keys
+```
+
+Add `client/` to your Windows PATH permanently (PowerShell as Administrator, once):
+
+```powershell
+[Environment]::SetEnvironmentVariable(
+    'PATH',
+    [Environment]::GetEnvironmentVariable('PATH', 'Machine') + ';C:\dev\Personal\proxy\client',
+    [EnvironmentVariableTarget]::Machine
+)
+```
+
+Restart your terminal, then:
+
+```
+proxy on       # Start the VPS — prints the EIP when ready
+proxy off      # Stop the VPS in economical mode (no compute charges)
+proxy status   # Show current instance state
+```
+
+> After `proxy off`, disable the system proxy in v2rayN: tray icon → System proxy → Clear system proxy.
+
+---
+
 ## Future Clients
 
 The same VPS and inbound works for all platforms — no server changes needed.
@@ -103,3 +140,25 @@ The same VPS and inbound works for all platforms — no server changes needed.
 | iOS | [Shadowrocket](https://apps.apple.com/app/shadowrocket/id932747118) or [Streisand](https://apps.apple.com/app/streisand/id6450534064) |
 
 Both support VLESS share links exported from 3x-ui.
+
+---
+
+## IP Rotation (Optional)
+
+The VPS has a fixed Elastic IP (EIP), so Bilibili always sees the same IP. For normal streaming this is fine. If you ever need IP rotation:
+
+**Option A — NAT Gateway + EIP pool (recommended)**
+- Attach an Alibaba Cloud NAT Gateway to the VPS's VPC
+- Add 3–5 EIPs to the SNAT pool
+- Alibaba Cloud rotates which EIP is used for outbound traffic automatically
+- No client config changes needed; Bilibili sees a different IP per session
+- Cost: ~¥0.015/hr per EIP + NAT Gateway hourly fee
+
+**Option B — EIP swap (manual, free)**
+- In the Alibaba Cloud console: release the current EIP, allocate a new one, re-attach it
+- New IP immediately, same server and 3x-ui config
+- Requires updating the `vless://` share link in v2rayN afterward
+
+**Option C — Multiple VPS instances**
+- Run 3x-ui on 2–3 cheap ECS instances in different zones (each gets a different IP)
+- Swap the active server in v2rayN to rotate manually
