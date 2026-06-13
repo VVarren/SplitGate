@@ -12,7 +12,19 @@ Routes Chinese streaming traffic through an Alibaba Cloud VPS so the VPS's mainl
 
 ## 1. VPS Setup
 
-SSH into your Alibaba VPS and run:
+First, copy `server/install.sh` to your VPS. From PowerShell:
+
+```powershell
+scp server\install.sh root@<your-eip>:~/install.sh
+```
+
+Then SSH into the VPS:
+
+```powershell
+ssh root@<your-eip>
+```
+
+Once connected (you are now in a Linux terminal on the VPS), run:
 
 ```bash
 sudo bash install.sh
