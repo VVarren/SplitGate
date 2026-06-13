@@ -72,8 +72,14 @@ Open that URL in your browser.
 
 Open a terminal and run:
 
+**Bash:**
 ```bash
 curl --proxy socks5://127.0.0.1:10808 https://api.ip.sb/ip
+```
+
+**PowerShell** (`curl` in PowerShell is an alias for `Invoke-WebRequest` — use `curl.exe` instead):
+```powershell
+curl.exe --proxy socks5://127.0.0.1:10808 https://api.ip.sb/ip
 ```
 
 The returned IP should be your Alibaba VPS's Chinese IP address.
@@ -103,10 +109,17 @@ pip install -r client/requirements.txt
 
 Copy the credential template and fill in your values:
 
+**Bash:**
 ```bash
 cp client/.env.example client/.env
-# Edit client/.env — Access Key from Alibaba Cloud console → RAM → Access Keys
 ```
+
+**PowerShell:**
+```powershell
+Copy-Item client\.env.example client\.env
+```
+
+Then edit `client/.env` — get your Access Key from Alibaba Cloud console → RAM → Access Keys.
 
 Add `client/` to your Windows PATH permanently (one-time setup):
 
