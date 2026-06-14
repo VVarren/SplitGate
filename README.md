@@ -12,11 +12,17 @@ Routes Chinese streaming traffic through an Alibaba Cloud VPS so the VPS's mainl
 
 ## 1. VPS Setup
 
+> **Mainland China note:** GitHub is frequently blocked or throttled from China-region VPS instances. The 3x-ui installer downloads from GitHub, so it may fail with `Downloading x-ui failed, please be sure that your server can access GitHub`. If that happens, just retry — access is often intermittent. The **SSL step is the most common hang** (it downloads `acme.sh` from GitHub), which is why we skip it below.
+
 First, copy `server/install.sh` to your VPS. From PowerShell:
 
 ```powershell
 scp server\install.sh root@<your-eip>:~/install.sh
 ```
+
+> If you reinitialized the disk and `scp`/`ssh` fails with **REMOTE HOST IDENTIFICATION HAS CHANGED**, clear the stale key first: `ssh-keygen -R <your-eip>`, then retry.
+>
+> If `scp`/`ssh` **times out**, connect through the Alibaba Cloud console instead: **Instance → Remote Connection → Workbench** (browser terminal), and upload `install.sh` using the Workbench upload-file button.
 
 Then SSH into the VPS:
 
@@ -30,15 +36,32 @@ Once connected (you are now in a Linux terminal on the VPS), run:
 sudo bash install.sh
 ```
 
-When it finishes it prints:
+**The installer is interactive.** Answer the prompts exactly like this:
+
+| Prompt | Answer | Why |
+|---|---|---|
+| Database Selection | `1` (SQLite) | Fine for personal use |
+| Customize panel port? | `y`, then `2053` | Must match the security group rule. Answering `n` assigns a **random** port. |
+| SSL Certificate Setup | `4` (Skip SSL) | acme.sh downloads from GitHub (blocked in China) and needs port 80. The secret base path already protects the panel. |
+| IPv6 address | *(press Enter)* | ECS has no IPv6 by default |
+
+The installer sets a **random username, password, and secret base URI path** — it does **not** use `admin`/`admin` or `/xui`. Retrieve them after install:
+
+```bash
+x-ui settings
+```
+
+This prints the `port` and `webBasePath`. Your panel URL is:
 
 ```
-Panel URL : http://<your-vps-ip>:2053/xui
-Username  : admin
-Password  : admin
+http://<your-eip>:<port>/<webBasePath>/
 ```
 
-Open that URL in your browser.
+For example: `http://120.26.202.101:2053/BPUx631aUVc7A7b36R/`
+
+If you don't know the username/password (or they're rejected), reset them by running `x-ui` to open the management menu and choosing the **Reset Username & Password** option, then log in with the new values.
+
+Open the panel URL in your browser.
 
 ---
 
@@ -104,7 +127,14 @@ Then open [bilibili.com](https://bilibili.com) and confirm region-locked content
 
 | Symptom | Fix |
 |---|---|
-| Panel URL unreachable | Check Alibaba Security Group allows port 2053 inbound |
+| Panel says **page not found** / `/xui` 404s | The path is the random secret base URI, not `/xui`. Run `x-ui settings` and use the `webBasePath` value: `http://<eip>:<port>/<webBasePath>/` |
+| **admin/admin rejected** ("invalid username or password") | Credentials are randomized at install. Run `x-ui` → choose **Reset Username & Password**, then log in with the new values |
+| Panel URL unreachable (connection refused/timeout) | Check Alibaba Security Group allows the panel port (2053) inbound, **and** `ufw status` on the VPS lists `2053/tcp`. Confirm `systemctl status x-ui` shows `active (running)` |
+| Install hangs on **"Installing acme.sh for SSL"** | acme.sh downloads from GitHub (blocked in China). Press **Ctrl+C**, rerun `sudo bash install.sh`, and choose **`4` (Skip SSL)** at the SSL prompt |
+| `Downloading x-ui failed ... access GitHub` | China region intermittently blocks GitHub. Retry the install; if persistent, replace the system disk and try again |
+| **REMOTE HOST IDENTIFICATION HAS CHANGED** on ssh/scp | The VPS key changed (e.g. after disk reinit). Run `ssh-keygen -R <your-eip>` and retry |
+| `ssh`/`scp` **times out** | Use the Alibaba Cloud **Workbench** browser terminal (Instance → Remote Connection) and its upload-file button instead |
+| Accidentally set a **random panel port** | Run `x-ui settings` to see the current port, or rerun `sudo bash install.sh` and answer `y` → `2053` at the port prompt |
 | v2rayN shows connection error | Verify the share link is correct; check VPS firewall allows port 443 |
 | IP check returns your real IP | Ensure system proxy is enabled in v2rayN tray icon |
 | Streaming site still geo-blocked | Check the domain is in `client/routing.json`; add it if missing |
