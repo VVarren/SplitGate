@@ -2,6 +2,47 @@
 
 Routes Chinese streaming traffic through an Alibaba Cloud VPS so the VPS's mainland China IP is presented to streaming sites (Bilibili, iQIYI, Youku, etc.).
 
+---
+
+## Daily Use (TL;DR)
+
+> The day-to-day is just two commands plus a toggle. **You do not need to SSH in or start xray manually** — the `x-ui` service is enabled, so xray + the Shadowsocks inbound auto-start whenever the instance boots.
+
+**Turn ON (to stream):**
+
+1. Start the VPS — xray comes up automatically on boot:
+   ```
+   proxy on
+   ```
+   Wait for it to report Running.
+2. Open **v2rayN** (run `v2rayN.exe`, or it's already in the system tray). At the bottom of the window confirm:
+   - the **Shadowsocks** server row is **active** (double-click it if not)
+   - **Routing** dropdown = **China Streaming**
+   - **System proxy** dropdown = **Set system proxy**
+
+That's it — open bilibili to confirm.
+
+**Turn OFF (when done):**
+
+1. In v2rayN: **System proxy → Clear system proxy** (so normal browsing isn't routed).
+2. Stop the VPS to halt compute billing:
+   ```
+   proxy off
+   ```
+   You can leave v2rayN idle in the tray or exit it.
+
+**If the proxy doesn't respond after `proxy on`** (fallback only — not normally needed):
+
+```bash
+ssh root@<your-eip>
+systemctl status x-ui        # should say: active (running)
+x-ui restart                 # if it isn't running
+```
+
+First-time setup is in the numbered sections below.
+
+---
+
 ## Prerequisites
 
 - Alibaba Cloud ECS instance running **Ubuntu 22.04** in a mainland China region (e.g. cn-hangzhou, cn-shanghai)
