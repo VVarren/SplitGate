@@ -43,3 +43,40 @@ function Reset-ProxyRegistry {
     Set-ItemProperty -Path $script:ProxyRegPath -Name ProxyEnable -Value 0 -ErrorAction SilentlyContinue
     Write-Host 'System proxy registry reset (ProxyEnable=0).'
 }
+
+function Invoke-ProxyPy {
+    param([string[]]$PyArgs)
+    $here = $PSScriptRoot
+    & python (Join-Path $here 'proxy.py') @PyArgs
+}
+
+function Invoke-ProxyOn {
+    $envFile = Join-Path $PSScriptRoot '.env'
+    Start-V2rayn (Get-V2raynPath $envFile)
+    Invoke-ProxyPy 'on'
+}
+
+function Invoke-ProxyOff {
+    Stop-V2rayn
+    Reset-ProxyRegistry
+    Invoke-ProxyPy 'off'
+}
+
+function Invoke-ProxyStatus {
+    Invoke-ProxyPy 'status'
+    if (Test-V2raynRunning) {
+        Write-Host 'v2rayN: running'
+    } else {
+        Write-Host 'v2rayN: not running'
+    }
+}
+
+function Invoke-Proxy {
+    param([string]$Command)
+    switch ($Command) {
+        'on'     { Invoke-ProxyOn }
+        'off'    { Invoke-ProxyOff }
+        'status' { Invoke-ProxyStatus }
+        default  { throw "Usage: proxy <on | off | status>" }
+    }
+}
