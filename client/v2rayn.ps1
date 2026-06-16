@@ -24,3 +24,22 @@ function Start-V2rayn {
     Start-Process -FilePath $Path
     Write-Host 'Launched v2rayN.'
 }
+
+function Stop-V2rayn {
+    $proc = Test-V2raynRunning
+    if (-not $proc) {
+        Write-Host 'v2rayN not running.'
+        return
+    }
+    Write-Host 'Closing v2rayN...'
+    [void]$proc.CloseMainWindow()
+    Start-Sleep -Seconds 2
+    if (-not $proc.HasExited) {
+        Stop-Process -Id $proc.Id -Force
+    }
+}
+
+function Reset-ProxyRegistry {
+    Set-ItemProperty -Path $script:ProxyRegPath -Name ProxyEnable -Value 0 -ErrorAction SilentlyContinue
+    Write-Host 'System proxy registry reset (ProxyEnable=0).'
+}

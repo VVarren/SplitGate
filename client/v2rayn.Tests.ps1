@@ -39,3 +39,34 @@ Describe 'Start-V2rayn' {
         }
     }
 }
+
+Describe 'Stop-V2rayn' {
+    Context 'when v2rayN is not running' {
+        It 'is a no-op' {
+            Mock -CommandName Get-Process -MockWith { $null }
+            Mock -CommandName Stop-Process -MockWith {}
+            Stop-V2rayn
+            Assert-MockCalled Stop-Process -Exactly 0
+        }
+    }
+
+    Context 'when v2rayN exits gracefully' {
+        It 'does not force-kill it' {
+            $proc = [pscustomobject]@{ Id = 7; HasExited = $true }
+            $proc | Add-Member -MemberType ScriptMethod -Name CloseMainWindow -Value { $true }
+            Mock -CommandName Get-Process -MockWith { $proc }
+            Mock -CommandName Start-Sleep -MockWith {}
+            Mock -CommandName Stop-Process -MockWith {}
+            Stop-V2rayn
+            Assert-MockCalled Stop-Process -Exactly 0
+        }
+    }
+}
+
+Describe 'Reset-ProxyRegistry' {
+    It 'forces ProxyEnable to 0' {
+        Mock -CommandName Set-ItemProperty -MockWith {}
+        Reset-ProxyRegistry
+        Assert-MockCalled Set-ItemProperty -Exactly 1
+    }
+}
