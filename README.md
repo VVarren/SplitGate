@@ -6,30 +6,33 @@ Routes Chinese streaming traffic through an Alibaba Cloud VPS so the VPS's mainl
 
 ## Daily Use (TL;DR)
 
-> The day-to-day is just two commands plus a toggle. **You do not need to SSH in or start xray manually** — the `x-ui` service is enabled, so xray + the Shadowsocks inbound auto-start whenever the instance boots.
+> One command runs both ends of the tunnel. `proxy on/off/status` now manages **both** the China VPS **and** the local v2rayN client — you no longer launch or close v2rayN by hand. **You also do not need to SSH in or start xray manually** — the `x-ui` service is enabled, so xray + the Shadowsocks inbound auto-start whenever the instance boots.
 
 **Turn ON (to stream):**
 
-1. Start the VPS — xray comes up automatically on boot:
-   ```
-   proxy on
-   ```
-   Wait for it to report Running.
-2. Open **v2rayN** (run `v2rayN.exe`, or it's already in the system tray). At the bottom of the window confirm:
-   - the **Shadowsocks** server row is **active** (double-click it if not)
-   - **Routing** dropdown = **China Streaming**
-   - **System proxy** dropdown = **Set system proxy**
+```
+proxy on
+```
 
-That's it — open bilibili to confirm.
+This launches v2rayN (it restores its last state — active Shadowsocks server, **China Streaming** routing, system-proxy mode — from `guiNConfig.json`) and starts the VPS. v2rayN retries until xray is up. When it reports Running, open bilibili to confirm.
 
 **Turn OFF (when done):**
 
-1. In v2rayN: **System proxy → Clear system proxy** (so normal browsing isn't routed).
-2. Stop the VPS to halt compute billing:
-   ```
-   proxy off
-   ```
-   You can leave v2rayN idle in the tray or exit it.
+```
+proxy off
+```
+
+This closes v2rayN gracefully (so its exit handler clears the system proxy), resets the proxy registry key as a safety net, then stops the VPS to halt compute billing.
+
+**Check state:**
+
+```
+proxy status
+```
+
+Reports the VPS instance state and whether v2rayN is running.
+
+> **One-time setup:** set `V2RAYN_PATH` in `client/.env` to your `v2rayN.exe` path (see §5). Without it, `proxy on` cannot launch the client.
 
 **If the proxy doesn't respond after `proxy on`** (fallback only — not normally needed):
 
@@ -227,7 +230,7 @@ cp client/.env.example client/.env
 Copy-Item client\.env.example client\.env
 ```
 
-Then edit `client/.env` — get your Access Key from Alibaba Cloud console → RAM → Access Keys.
+Then edit `client/.env` — get your Access Key from Alibaba Cloud console → RAM → Access Keys. Also set **`V2RAYN_PATH`** to the full path of your `v2rayN.exe` (e.g. `C:\Users\you\Downloads\v2rayN-windows-64\v2rayN.exe`) so `proxy on` can launch the client.
 
 Add `client/` to your Windows PATH permanently (one-time setup):
 
@@ -244,12 +247,12 @@ Add `client/` to your Windows PATH permanently (one-time setup):
 Then:
 
 ```
-proxy on       # Start the VPS — prints the EIP when ready
-proxy off      # Stop the VPS in economical mode (no compute charges)
-proxy status   # Show current instance state
+proxy on       # Launch v2rayN + start the VPS — prints the EIP when ready
+proxy off      # Close v2rayN, clear the system proxy, stop the VPS (no compute charges)
+proxy status   # Show instance state + whether v2rayN is running
 ```
 
-> After `proxy off`, disable the system proxy in v2rayN: tray icon → System proxy → Clear system proxy.
+> `proxy off` closes v2rayN gracefully and resets the system-proxy registry key, so you don't have to clear the proxy by hand. The Windows orchestration lives in `client/v2rayn.ps1` (unit-tested via `client/v2rayn.Tests.ps1`); `proxy.py` still handles the Alibaba ECS side.
 
 ---
 
