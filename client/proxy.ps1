@@ -1,4 +1,4 @@
-. (Join-Path $PSScriptRoot 'v2rayn.ps1')
+. (Join-Path $PSScriptRoot 'xray.ps1')
 
 try {
     Invoke-Proxy -Command $args[0]

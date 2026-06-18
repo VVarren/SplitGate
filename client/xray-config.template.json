@@ -1,0 +1,73 @@
+{
+  "log": { "loglevel": "warning" },
+  "dns": {
+    "servers": [
+      {
+        "address": "https://cloudflare-dns.com/dns-query",
+        "domains": [
+          "domain:bilibili.com", "domain:bilivideo.com", "domain:bilivideo.cn",
+          "domain:hdslb.com", "domain:acgvideo.com", "domain:iqiyi.com",
+          "domain:iqiyipic.com", "domain:qy.net", "domain:youku.com",
+          "domain:youku.tv", "domain:mgtv.com", "domain:hunantv.com",
+          "domain:v.qq.com", "domain:wetv.vip", "domain:douyu.com",
+          "domain:huya.com", "domain:api.bilibili.com"
+        ],
+        "skipFallback": true
+      },
+      { "address": "119.29.29.29", "domains": ["full:cloudflare-dns.com"], "skipFallback": true },
+      "https://cloudflare-dns.com/dns-query"
+    ],
+    "tag": "dns-module"
+  },
+  "inbounds": [
+    {
+      "tag": "socks",
+      "port": __SOCKS_PORT__,
+      "listen": "127.0.0.1",
+      "protocol": "mixed",
+      "sniffing": { "enabled": true, "destOverride": ["http", "tls"], "routeOnly": false },
+      "settings": { "auth": "noauth", "udp": true, "allowTransparent": false }
+    }
+  ],
+  "outbounds": [
+    {
+      "tag": "proxy",
+      "protocol": "shadowsocks",
+      "settings": {
+        "servers": [
+          {
+            "address": "__SERVER_HOST__",
+            "method": "__SS_CIPHER__",
+            "ota": false,
+            "password": "__SS_PASSWORD__",
+            "port": __SS_PORT__,
+            "level": 1
+          }
+        ]
+      },
+      "streamSettings": { "network": "raw" },
+      "mux": { "enabled": false, "concurrency": -1 }
+    },
+    { "tag": "direct", "protocol": "freedom" },
+    { "tag": "block", "protocol": "blackhole" }
+  ],
+  "routing": {
+    "domainStrategy": "IPIfNonMatch",
+    "rules": [
+      {
+        "type": "field",
+        "outboundTag": "proxy",
+        "domain": [
+          "domain:bilibili.com", "domain:bilivideo.com", "domain:bilivideo.cn",
+          "domain:hdslb.com", "domain:acgvideo.com", "domain:iqiyi.com",
+          "domain:iqiyipic.com", "domain:qy.net", "domain:youku.com",
+          "domain:youku.tv", "domain:mgtv.com", "domain:hunantv.com",
+          "domain:v.qq.com", "domain:wetv.vip", "domain:douyu.com",
+          "domain:huya.com", "domain:api.bilibili.com"
+        ]
+      },
+      { "type": "field", "network": "tcp,udp", "outboundTag": "direct" },
+      { "type": "field", "inboundTag": ["dns-module"], "outboundTag": "proxy" }
+    ]
+  }
+}
