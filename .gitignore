@@ -1,2 +1,7 @@
 .worktrees/
 client/.env
+client/__pycache__/
+.understand-anything/
+claude_context_png/
+install_3xui.sh
+docs/
