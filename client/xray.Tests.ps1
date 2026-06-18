@@ -53,6 +53,12 @@ Describe 'New-XrayConfig' {
         $json.pw      | Should Be 'pw1'
     }
 
+    It 'writes the file without a UTF-8 BOM (xray rejects a BOM)' {
+        New-XrayConfig $template $values $out | Out-Null
+        $bytes = [System.IO.File]::ReadAllBytes($out)
+        ($bytes[0] -eq 0xEF -and $bytes[1] -eq 0xBB -and $bytes[2] -eq 0xBF) | Should Be $false
+    }
+
     It 'throws when a token is left unsubstituted' {
         Set-Content $template '{ "x": "__SERVER_HOST__", "y": "__UNKNOWN__" }'
         { New-XrayConfig $template $values $out } | Should Throw

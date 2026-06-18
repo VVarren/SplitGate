@@ -30,7 +30,10 @@ function New-XrayConfig {
     if ($text -match '__[A-Z_]+__') { throw "Unsubstituted token in rendered config: $($Matches[0])" }
     $dir = Split-Path -Parent $OutPath
     if (-not (Test-Path $dir)) { New-Item -ItemType Directory -Path $dir -Force | Out-Null }
-    Set-Content -Path $OutPath -Value $text -Encoding UTF8
+    # xray's JSON parser rejects a UTF-8 BOM. PS 5.1 'Set-Content -Encoding UTF8' writes one,
+    # so write the bytes ourselves with a BOM-less UTF-8 encoder.
+    $utf8NoBom = New-Object System.Text.UTF8Encoding($false)
+    [System.IO.File]::WriteAllText($OutPath, $text, $utf8NoBom)
     return $OutPath
 }
 
