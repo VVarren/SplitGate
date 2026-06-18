@@ -58,3 +58,80 @@ Describe 'New-XrayConfig' {
         { New-XrayConfig $template $values $out } | Should Throw
     }
 }
+
+Describe 'Test-XrayRunning' {
+    Context 'when pidfile points at a live xray process' {
+        It 'returns the process' {
+            $rt = Join-Path $TestDrive 'rt1'; New-Item -ItemType Directory $rt -Force | Out-Null
+            Set-Content (Join-Path $rt 'xray.pid') '123'
+            Mock -CommandName Get-Process -MockWith { [pscustomobject]@{ Id = 123; Name = 'xray' } }
+            (Test-XrayRunning $rt).Id | Should Be 123
+        }
+    }
+    Context 'when no pidfile exists' {
+        It 'returns null' {
+            $rt = Join-Path $TestDrive 'rt2'; New-Item -ItemType Directory $rt -Force | Out-Null
+            Test-XrayRunning $rt | Should Be $null
+        }
+    }
+    Context 'when pid was reused by a non-xray process' {
+        It 'returns null' {
+            $rt = Join-Path $TestDrive 'rt3'; New-Item -ItemType Directory $rt -Force | Out-Null
+            Set-Content (Join-Path $rt 'xray.pid') '123'
+            Mock -CommandName Get-Process -MockWith { [pscustomobject]@{ Id = 123; Name = 'notepad' } }
+            Test-XrayRunning $rt | Should Be $null
+        }
+    }
+}
+
+Describe 'Start-Xray' {
+    Context 'when not already running' {
+        It 'launches xray and writes the pidfile' {
+            $rt = Join-Path $TestDrive 'srt1'; New-Item -ItemType Directory $rt -Force | Out-Null
+            Mock -CommandName Test-XrayRunning -MockWith { $null }
+            Mock -CommandName Start-Process -MockWith { [pscustomobject]@{ Id = 555; HasExited = $false } }
+            Mock -CommandName Start-Sleep -MockWith {}
+            Start-Xray 'C:\apps\xray.exe' 'C:\cfg.json' $rt
+            Get-Content (Join-Path $rt 'xray.pid') | Should Be '555'
+        }
+    }
+    Context 'when xray exits immediately' {
+        It 'throws' {
+            $rt = Join-Path $TestDrive 'srt2'; New-Item -ItemType Directory $rt -Force | Out-Null
+            Mock -CommandName Test-XrayRunning -MockWith { $null }
+            Mock -CommandName Start-Process -MockWith { [pscustomobject]@{ Id = 556; HasExited = $true } }
+            Mock -CommandName Start-Sleep -MockWith {}
+            { Start-Xray 'C:\apps\xray.exe' 'C:\cfg.json' $rt } | Should Throw
+        }
+    }
+    Context 'when already running' {
+        It 'does not launch a second instance' {
+            $rt = Join-Path $TestDrive 'srt3'; New-Item -ItemType Directory $rt -Force | Out-Null
+            Mock -CommandName Test-XrayRunning -MockWith { [pscustomobject]@{ Id = 1 } }
+            Mock -CommandName Start-Process -MockWith {}
+            Start-Xray 'C:\apps\xray.exe' 'C:\cfg.json' $rt
+            Assert-MockCalled Start-Process -Exactly 0
+        }
+    }
+}
+
+Describe 'Stop-Xray' {
+    Context 'when not running' {
+        It 'is a no-op' {
+            Mock -CommandName Test-XrayRunning -MockWith { $null }
+            Mock -CommandName Stop-Process -MockWith {}
+            Stop-Xray (Join-Path $TestDrive 'xrt1')
+            Assert-MockCalled Stop-Process -Exactly 0
+        }
+    }
+    Context 'when running' {
+        It 'stops the process' {
+            $rt = Join-Path $TestDrive 'xrt2'; New-Item -ItemType Directory $rt -Force | Out-Null
+            Set-Content (Join-Path $rt 'xray.pid') '777'
+            Mock -CommandName Test-XrayRunning -MockWith { [pscustomobject]@{ Id = 777; Name = 'xray' } }
+            Mock -CommandName Stop-Process -MockWith {}
+            Stop-Xray $rt
+            Assert-MockCalled Stop-Process -Exactly 1
+        }
+    }
+}
