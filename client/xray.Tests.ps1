@@ -33,3 +33,28 @@ XRAY_EXE=C:\apps\xray.exe
         { Get-XraySettings $tmp } | Should Throw
     }
 }
+
+Describe 'New-XrayConfig' {
+    $template = Join-Path $TestDrive 'tmpl.json'
+    $out      = Join-Path $TestDrive 'out\config.json'
+    Set-Content $template '{ "address": "__SERVER_HOST__", "port": __SS_PORT__, "pw": "__SS_PASSWORD__", "m": "__SS_CIPHER__", "in": __SOCKS_PORT__ }'
+
+    $values = @{
+        SERVER_HOST = '121.41.167.5'; SS_PASSWORD = 'pw1'; SS_PORT = '443'
+        SS_CIPHER = 'chacha20-ietf-poly1305'; SOCKS_PORT = '10808'
+    }
+
+    It 'substitutes all tokens and writes valid JSON' {
+        New-XrayConfig $template $values $out | Should Be $out
+        $json = Get-Content $out -Raw | ConvertFrom-Json
+        $json.address | Should Be '121.41.167.5'
+        $json.port    | Should Be 443
+        $json.in      | Should Be 10808
+        $json.pw      | Should Be 'pw1'
+    }
+
+    It 'throws when a token is left unsubstituted' {
+        Set-Content $template '{ "x": "__SERVER_HOST__", "y": "__UNKNOWN__" }'
+        { New-XrayConfig $template $values $out } | Should Throw
+    }
+}
