@@ -135,3 +135,19 @@ Describe 'Stop-Xray' {
         }
     }
 }
+
+Describe 'Set-SystemProxy' {
+    It 'writes ProxyServer and ProxyEnable' {
+        Mock -CommandName Set-ItemProperty -MockWith {}
+        Set-SystemProxy '10808'
+        Assert-MockCalled Set-ItemProperty -Exactly 2
+    }
+}
+
+Describe 'Reset-ProxyRegistry' {
+    It 'forces ProxyEnable to 0' {
+        Mock -CommandName Set-ItemProperty -MockWith {}
+        Reset-ProxyRegistry
+        Assert-MockCalled Set-ItemProperty -Exactly 1
+    }
+}

@@ -76,3 +76,15 @@ function Stop-Xray {
     Remove-Item (Get-XrayPidFile $RuntimeDir) -ErrorAction SilentlyContinue
     Write-Host 'Stopped xray.'
 }
+
+function Set-SystemProxy {
+    param([string]$SocksPort)
+    Set-ItemProperty -Path $script:ProxyRegPath -Name ProxyServer -Value "127.0.0.1:$SocksPort"
+    Set-ItemProperty -Path $script:ProxyRegPath -Name ProxyEnable -Value 1
+    Write-Host "System proxy set to 127.0.0.1:$SocksPort."
+}
+
+function Reset-ProxyRegistry {
+    Set-ItemProperty -Path $script:ProxyRegPath -Name ProxyEnable -Value 0 -ErrorAction SilentlyContinue
+    Write-Host 'System proxy registry reset (ProxyEnable=0).'
+}
