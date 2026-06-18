@@ -151,3 +151,50 @@ Describe 'Reset-ProxyRegistry' {
         Assert-MockCalled Set-ItemProperty -Exactly 1
     }
 }
+
+Describe 'Invoke-ProxyOn' {
+    It 'renders config, starts server, starts xray, sets proxy IN ORDER' {
+        $script:order = @()
+        Mock -CommandName Get-XraySettings -MockWith { @{ XRAY_EXE='x'; SOCKS_PORT='10808' } }
+        Mock -CommandName New-XrayConfig   -MockWith { $script:order += 'render'; 'cfg.json' }
+        Mock -CommandName Invoke-ProxyPy   -MockWith { $script:order += "py:$($PyArgs -join ',')" }
+        Mock -CommandName Start-Xray       -MockWith { $script:order += 'start' }
+        Mock -CommandName Set-SystemProxy  -MockWith { $script:order += 'set' }
+        Invoke-ProxyOn
+        ($script:order -join '>') | Should Be 'render>py:on>start>set'
+    }
+}
+
+Describe 'Invoke-ProxyOff' {
+    It 'resets registry, stops xray, then stops the instance IN ORDER' {
+        $script:order = @()
+        Mock -CommandName Reset-ProxyRegistry -MockWith { $script:order += 'reset' }
+        Mock -CommandName Stop-Xray           -MockWith { $script:order += 'stop' }
+        Mock -CommandName Invoke-ProxyPy      -MockWith { $script:order += "py:$($PyArgs -join ',')" }
+        Invoke-ProxyOff
+        ($script:order -join '>') | Should Be 'reset>stop>py:off'
+    }
+}
+
+Describe 'Invoke-ProxyStatus' {
+    It 'calls python status' {
+        Mock -CommandName Invoke-ProxyPy    -MockWith {}
+        Mock -CommandName Test-XrayRunning   -MockWith { $null }
+        Mock -CommandName Get-Process        -MockWith { $null }
+        Invoke-ProxyStatus
+        Assert-MockCalled Invoke-ProxyPy -Exactly 1
+    }
+}
+
+Describe 'Invoke-Proxy' {
+    Context 'with an unknown command' {
+        It 'throws' { { Invoke-Proxy 'bogus' } | Should Throw }
+    }
+    Context 'with on' {
+        It 'dispatches to Invoke-ProxyOn' {
+            Mock -CommandName Invoke-ProxyOn -MockWith {}
+            Invoke-Proxy 'on'
+            Assert-MockCalled Invoke-ProxyOn -Exactly 1
+        }
+    }
+}

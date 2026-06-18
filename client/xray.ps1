@@ -88,3 +88,42 @@ function Reset-ProxyRegistry {
     Set-ItemProperty -Path $script:ProxyRegPath -Name ProxyEnable -Value 0 -ErrorAction SilentlyContinue
     Write-Host 'System proxy registry reset (ProxyEnable=0).'
 }
+
+function Invoke-ProxyPy {
+    param([string[]]$PyArgs)
+    & python (Join-Path $PSScriptRoot 'proxy.py') @PyArgs
+}
+
+function Invoke-ProxyOn {
+    $envFile  = Join-Path $PSScriptRoot '.env'
+    $template = Join-Path $PSScriptRoot 'xray-config.template.json'
+    $settings = Get-XraySettings $envFile
+    $config   = New-XrayConfig $template $settings (Join-Path $script:RuntimeDir 'config.json')
+    Invoke-ProxyPy 'on'
+    Start-Xray $settings['XRAY_EXE'] $config $script:RuntimeDir
+    Set-SystemProxy $settings['SOCKS_PORT']
+}
+
+function Invoke-ProxyOff {
+    Reset-ProxyRegistry
+    Stop-Xray $script:RuntimeDir
+    Invoke-ProxyPy 'off'
+}
+
+function Invoke-ProxyStatus {
+    Invoke-ProxyPy 'status'
+    if (Test-XrayRunning $script:RuntimeDir) { Write-Host 'xray: running' } else { Write-Host 'xray: not running' }
+    if (Get-Process -Name 'v2rayN' -ErrorAction SilentlyContinue) {
+        Write-Host 'WARNING: v2rayN is running and may contend for the SOCKS port.'
+    }
+}
+
+function Invoke-Proxy {
+    param([string]$Command)
+    switch ($Command) {
+        'on'     { Invoke-ProxyOn }
+        'off'    { Invoke-ProxyOff }
+        'status' { Invoke-ProxyStatus }
+        default  { throw "Usage: proxy <on | off | status>" }
+    }
+}
