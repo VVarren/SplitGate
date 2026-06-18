@@ -5,3 +5,4 @@ client/__pycache__/
 claude_context_png/
 install_3xui.sh
 docs/
+client/.xray/
