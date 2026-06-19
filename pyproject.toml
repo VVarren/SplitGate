@@ -1,0 +1,29 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "splitgate"
+version = "0.1.0"
+requires-python = ">=3.9"
+dependencies = [
+    "alibabacloud-ecs20140526>=3.0.0",
+    "alibabacloud-tea-openapi>=0.3.7",
+    "python-dotenv>=1.0.0",
+    "psutil>=5.9.0",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=7.0.0"]
+
+[project.scripts]
+proxy = "splitgate.cli:main"
+
+[tool.setuptools]
+packages = ["splitgate"]
+
+[tool.setuptools.package-data]
+splitgate = ["xray-config.template.json", "routing.json"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

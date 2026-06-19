@@ -1,8 +1,10 @@
 .worktrees/
-client/.env
-client/__pycache__/
+.env
+__pycache__/
 .understand-anything/
 claude_context_png/
 install_3xui.sh
 docs/
-client/.xray/
+.xray/
+*.egg-info/
+.pytest_cache/
