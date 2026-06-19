@@ -2,6 +2,8 @@
 
 **A one-command, split-tunnel gateway for region-locked Chinese streaming.**
 
+**ALWAYS USE "proxy off" BEFORE SHUTTING OFF THE TERMINAL**
+
 SplitGate routes traffic for Chinese streaming sites (Bilibili, iQIYI, Youku, Tencent Video, …) through a mainland-China VPS, while everything else goes direct. A single command brings the whole tunnel up and down — it starts/stops the cloud VPS *and* runs the local proxy engine headlessly, with no GUI to babysit.
 
 ```
