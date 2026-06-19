@@ -251,7 +251,7 @@ The same VPS and Shadowsocks inbound work for any client — no server changes n
 The VPS has a fixed Elastic IP, so the destination always sees the same address. If you need rotation:
 
 - **NAT Gateway + EIP pool** — attach a NAT Gateway with 3–5 EIPs in the SNAT pool; Alibaba rotates the outbound EIP automatically, no client changes.
-- **Manual EIP swap** — release/allocate a new EIP in the console, then update `SERVER_HOST` in `client/.env`.
+- **Manual EIP swap** — release/allocate a new EIP in the console, then update `SERVER_HOST` in `.env`.
 - **Multiple instances** — run 3x-ui on several cheap instances in different zones and swap `SERVER_HOST`.
 
 ---
